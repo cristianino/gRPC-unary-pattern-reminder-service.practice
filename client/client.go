@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/cristianino/gRPC-unary-pattern-reminder-service.practice/protoService"
 	"google.golang.org/grpc"
@@ -70,7 +71,37 @@ func createTask(c protoService.RemiderServiceClient) {
 	scanner.Scan()
 	task.TeamName = scanner.Text()
 
-	task.Priority = protoService.PRIORITY_HIGH
+	fmt.Println("Select task priority:")
+	fmt.Println("0. Low")
+	fmt.Println("1. Mid")
+	fmt.Println("2. High")
+
+	var priority int32
+	fmt.Print("Enter priority (0, 1, or 2): ")
+	_, err := fmt.Scan(&priority)
+	if err != nil {
+		log.Fatalf("Failed to read priority: %v", err)
+	}
+
+	// Validar la entrada de prioridad
+	if priority < 0 || priority > 2 {
+		log.Fatalf("Invalid priority. Please enter a valid priority (0, 1, or 2).")
+	}
+
+	task.Priority = protoService.PRIORITY(priority)
+
+	fmt.Print("Enter task tags (comma-separated, leave empty for none): ")
+	scanner.Scan()
+	tagsInput := scanner.Text()
+
+	// Dividir las tags por comas y agregarlas al slice de tags
+	task.Tags = make([]string, 0)
+	if tagsInput != "" {
+		tags := strings.Split(tagsInput, ",")
+		for _, tag := range tags {
+			task.Tags = append(task.Tags, strings.TrimSpace(tag))
+		}
+	}
 
 	// Crear la solicitud y llamar al servidor
 	req := &protoService.TaskRequest{
@@ -104,5 +135,26 @@ func getTasks(c protoService.RemiderServiceClient) {
 		log.Fatalf("Error calling getTasks RPC: %v", err)
 	}
 
-	log.Printf("Response getTasks: %v", res.Tasks)
+	formattedTasks := formatTasks(res.Tasks)
+	fmt.Println(formattedTasks)
+}
+
+func formatTasks(tasks []*protoService.Task) string {
+	if len(tasks) == 0 {
+		return "No tasks found."
+	}
+
+	result := "Tasks:\n"
+	for _, task := range tasks {
+		result += fmt.Sprintf("    Message: %s\n", task.Message)
+		result += fmt.Sprintf("    Limit Date: %s\n", task.LimitDate)
+		result += fmt.Sprintf("    Team Name: %s\n", task.TeamName)
+		result += fmt.Sprintf("    Priority: %s\n", task.Priority.String())
+		if len(task.Tags) > 0 {
+			result += fmt.Sprintf("    Tags: %s\n", strings.Join(task.Tags, ", "))
+		}
+		result += "\n"
+	}
+
+	return result
 }
