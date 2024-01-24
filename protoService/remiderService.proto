@@ -4,7 +4,19 @@ package remiderService;
 
 option go_package = "protoService";
 
-import "protoService/task.proto";
+message Task {
+    string message = 1;
+    string limit_date = 2;
+    repeated string tags = 3;
+    string team_name = 4;
+    PRIORITY priority = 5;
+}
+
+enum PRIORITY {
+    LOW = 0;
+    MID = 1;
+    HIGH = 2;
+}
 
 message TaskRequest {
     Task task = 1;

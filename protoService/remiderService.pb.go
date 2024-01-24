@@ -4,8 +4,12 @@
 package protoService
 
 import (
+	context "context"
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -20,6 +24,105 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
+type PRIORITY int32
+
+const (
+	PRIORITY_LOW  PRIORITY = 0
+	PRIORITY_MID  PRIORITY = 1
+	PRIORITY_HIGH PRIORITY = 2
+)
+
+var PRIORITY_name = map[int32]string{
+	0: "LOW",
+	1: "MID",
+	2: "HIGH",
+}
+
+var PRIORITY_value = map[string]int32{
+	"LOW":  0,
+	"MID":  1,
+	"HIGH": 2,
+}
+
+func (x PRIORITY) String() string {
+	return proto.EnumName(PRIORITY_name, int32(x))
+}
+
+func (PRIORITY) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_2d3f97059af3282a, []int{0}
+}
+
+type Task struct {
+	Message              string   `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	LimitDate            string   `protobuf:"bytes,2,opt,name=limit_date,json=limitDate,proto3" json:"limit_date,omitempty"`
+	Tags                 []string `protobuf:"bytes,3,rep,name=tags,proto3" json:"tags,omitempty"`
+	TeamName             string   `protobuf:"bytes,4,opt,name=team_name,json=teamName,proto3" json:"team_name,omitempty"`
+	Priority             PRIORITY `protobuf:"varint,5,opt,name=priority,proto3,enum=remiderService.PRIORITY" json:"priority,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Task) Reset()         { *m = Task{} }
+func (m *Task) String() string { return proto.CompactTextString(m) }
+func (*Task) ProtoMessage()    {}
+func (*Task) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2d3f97059af3282a, []int{0}
+}
+
+func (m *Task) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Task.Unmarshal(m, b)
+}
+func (m *Task) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Task.Marshal(b, m, deterministic)
+}
+func (m *Task) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Task.Merge(m, src)
+}
+func (m *Task) XXX_Size() int {
+	return xxx_messageInfo_Task.Size(m)
+}
+func (m *Task) XXX_DiscardUnknown() {
+	xxx_messageInfo_Task.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Task proto.InternalMessageInfo
+
+func (m *Task) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *Task) GetLimitDate() string {
+	if m != nil {
+		return m.LimitDate
+	}
+	return ""
+}
+
+func (m *Task) GetTags() []string {
+	if m != nil {
+		return m.Tags
+	}
+	return nil
+}
+
+func (m *Task) GetTeamName() string {
+	if m != nil {
+		return m.TeamName
+	}
+	return ""
+}
+
+func (m *Task) GetPriority() PRIORITY {
+	if m != nil {
+		return m.Priority
+	}
+	return PRIORITY_LOW
+}
+
 type TaskRequest struct {
 	Task                 *Task    `protobuf:"bytes,1,opt,name=task,proto3" json:"task,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -31,7 +134,7 @@ func (m *TaskRequest) Reset()         { *m = TaskRequest{} }
 func (m *TaskRequest) String() string { return proto.CompactTextString(m) }
 func (*TaskRequest) ProtoMessage()    {}
 func (*TaskRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2d3f97059af3282a, []int{0}
+	return fileDescriptor_2d3f97059af3282a, []int{1}
 }
 
 func (m *TaskRequest) XXX_Unmarshal(b []byte) error {
@@ -70,7 +173,7 @@ func (m *TaskResponse) Reset()         { *m = TaskResponse{} }
 func (m *TaskResponse) String() string { return proto.CompactTextString(m) }
 func (*TaskResponse) ProtoMessage()    {}
 func (*TaskResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2d3f97059af3282a, []int{1}
+	return fileDescriptor_2d3f97059af3282a, []int{2}
 }
 
 func (m *TaskResponse) XXX_Unmarshal(b []byte) error {
@@ -109,7 +212,7 @@ func (m *GetTasksRequest) Reset()         { *m = GetTasksRequest{} }
 func (m *GetTasksRequest) String() string { return proto.CompactTextString(m) }
 func (*GetTasksRequest) ProtoMessage()    {}
 func (*GetTasksRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2d3f97059af3282a, []int{2}
+	return fileDescriptor_2d3f97059af3282a, []int{3}
 }
 
 func (m *GetTasksRequest) XXX_Unmarshal(b []byte) error {
@@ -148,7 +251,7 @@ func (m *TasksResponse) Reset()         { *m = TasksResponse{} }
 func (m *TasksResponse) String() string { return proto.CompactTextString(m) }
 func (*TasksResponse) ProtoMessage()    {}
 func (*TasksResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2d3f97059af3282a, []int{3}
+	return fileDescriptor_2d3f97059af3282a, []int{4}
 }
 
 func (m *TasksResponse) XXX_Unmarshal(b []byte) error {
@@ -177,6 +280,8 @@ func (m *TasksResponse) GetTasks() []*Task {
 }
 
 func init() {
+	proto.RegisterEnum("remiderService.PRIORITY", PRIORITY_name, PRIORITY_value)
+	proto.RegisterType((*Task)(nil), "remiderService.Task")
 	proto.RegisterType((*TaskRequest)(nil), "remiderService.TaskRequest")
 	proto.RegisterType((*TaskResponse)(nil), "remiderService.TaskResponse")
 	proto.RegisterType((*GetTasksRequest)(nil), "remiderService.GetTasksRequest")
@@ -188,20 +293,143 @@ func init() {
 }
 
 var fileDescriptor_2d3f97059af3282a = []byte{
-	// 228 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x2c, 0x28, 0xca, 0x2f,
-	0xc9, 0x0f, 0x4e, 0x2d, 0x2a, 0xcb, 0x4c, 0x4e, 0xd5, 0x2f, 0x4a, 0xcd, 0xcd, 0x4c, 0x49, 0x2d,
-	0x82, 0x72, 0xf5, 0xc0, 0x72, 0x42, 0x7c, 0xa8, 0xa2, 0x52, 0xe2, 0x28, 0x5a, 0x4a, 0x12, 0x8b,
-	0xb3, 0x21, 0x0a, 0x95, 0xcc, 0xb9, 0xb8, 0x43, 0x12, 0x8b, 0xb3, 0x83, 0x52, 0x0b, 0x4b, 0x53,
-	0x8b, 0x4b, 0x84, 0x34, 0xb8, 0x58, 0x40, 0x92, 0x12, 0x8c, 0x0a, 0x8c, 0x1a, 0xdc, 0x46, 0x22,
-	0x7a, 0x68, 0x86, 0x83, 0x95, 0x82, 0x55, 0x28, 0x69, 0x70, 0xf1, 0x40, 0x34, 0x16, 0x17, 0xe4,
-	0xe7, 0x15, 0xa7, 0x0a, 0x49, 0x70, 0xb1, 0xe7, 0xa6, 0x16, 0x17, 0x27, 0xa6, 0xa7, 0x82, 0x35,
-	0x73, 0x06, 0xc1, 0xb8, 0x4a, 0xda, 0x5c, 0xfc, 0xee, 0xa9, 0x25, 0x20, 0xc5, 0xc5, 0x30, 0x6b,
-	0x70, 0x2b, 0xb6, 0xe6, 0xe2, 0x85, 0xaa, 0x84, 0x9a, 0xab, 0xc5, 0xc5, 0x0a, 0xb2, 0xaf, 0x58,
-	0x82, 0x51, 0x81, 0x19, 0xa7, 0x93, 0x20, 0x4a, 0x8c, 0x96, 0x32, 0x72, 0xf1, 0x05, 0xa1, 0x48,
-	0x0b, 0xb9, 0x73, 0x71, 0x39, 0x17, 0xa5, 0x26, 0x96, 0xa4, 0x82, 0xd4, 0x09, 0x49, 0x63, 0xd5,
-	0x0d, 0x71, 0x94, 0x94, 0x0c, 0x76, 0x49, 0xa8, 0x3b, 0xbc, 0xb8, 0x38, 0x60, 0xbe, 0x10, 0x92,
-	0x47, 0x57, 0x89, 0xe6, 0x3f, 0x29, 0x59, 0x6c, 0x46, 0xc1, 0xfd, 0xe4, 0xc4, 0x17, 0xc5, 0x83,
-	0x1c, 0x1f, 0x49, 0x6c, 0x60, 0x9e, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x66, 0x86, 0x97, 0x02,
-	0xd9, 0x01, 0x00, 0x00,
+	// 346 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x92, 0x41, 0x4f, 0xfa, 0x40,
+	0x10, 0xc5, 0xff, 0xa5, 0xe5, 0x4f, 0x3b, 0x60, 0x25, 0x1b, 0x0f, 0x1b, 0x90, 0x58, 0x7b, 0x30,
+	0x0d, 0x26, 0x98, 0xa0, 0x89, 0x07, 0x6f, 0x4a, 0x02, 0x35, 0x2a, 0x66, 0x25, 0x31, 0x7a, 0x21,
+	0xab, 0x4c, 0x48, 0x83, 0xa5, 0xb8, 0xbb, 0x9a, 0xf8, 0x81, 0xf4, 0x73, 0x9a, 0x2e, 0x2d, 0x91,
+	0x06, 0x6e, 0x3b, 0x33, 0xbf, 0x9d, 0xf7, 0x5e, 0xbb, 0x70, 0xb8, 0x10, 0x89, 0x4a, 0x1e, 0x50,
+	0x7c, 0x46, 0xaf, 0x78, 0x22, 0x30, 0x8e, 0x26, 0x28, 0xb2, 0xb2, 0xa3, 0x67, 0xc4, 0x5d, 0xef,
+	0xfa, 0x3f, 0x06, 0x58, 0x23, 0x2e, 0x67, 0x84, 0x42, 0x25, 0x46, 0x29, 0xf9, 0x14, 0xa9, 0xe1,
+	0x19, 0x81, 0xc3, 0xf2, 0x92, 0xb4, 0x00, 0xde, 0xa2, 0x38, 0x52, 0xe3, 0x09, 0x57, 0x48, 0x4b,
+	0x7a, 0xe8, 0xe8, 0x4e, 0x8f, 0x2b, 0x24, 0x04, 0x2c, 0xc5, 0xa7, 0x92, 0x9a, 0x9e, 0x19, 0x38,
+	0x4c, 0x9f, 0x49, 0x13, 0x1c, 0x85, 0x3c, 0x1e, 0xcf, 0x79, 0x8c, 0xd4, 0xd2, 0x37, 0xec, 0xb4,
+	0x71, 0xc7, 0x63, 0x24, 0x67, 0x60, 0x2f, 0x44, 0x94, 0x88, 0x48, 0x7d, 0xd1, 0xb2, 0x67, 0x04,
+	0x6e, 0x97, 0x76, 0x0a, 0x5e, 0xef, 0x59, 0x38, 0x64, 0xe1, 0xe8, 0x89, 0xad, 0x48, 0xff, 0x1c,
+	0xaa, 0xa9, 0x4f, 0x86, 0xef, 0x1f, 0x28, 0x15, 0x09, 0x52, 0x55, 0x39, 0xd3, 0x5e, 0xab, 0xdd,
+	0xbd, 0xe2, 0x02, 0x8d, 0x6a, 0xc2, 0x0f, 0xa0, 0xb6, 0xbc, 0x28, 0x17, 0xc9, 0x5c, 0xe2, 0xf6,
+	0xa0, 0xfe, 0x31, 0xec, 0xf6, 0x51, 0xa5, 0xb0, 0xcc, 0x65, 0xb6, 0xc3, 0x17, 0xb0, 0x93, 0x91,
+	0xd9, 0xde, 0x36, 0x94, 0x53, 0x3d, 0x49, 0x0d, 0xcf, 0xdc, 0x6a, 0x69, 0x89, 0xb4, 0x8f, 0xc0,
+	0xce, 0x23, 0x92, 0x0a, 0x98, 0x37, 0xc3, 0xc7, 0xfa, 0xbf, 0xf4, 0x70, 0x1b, 0xf6, 0xea, 0x06,
+	0xb1, 0xc1, 0x1a, 0x84, 0xfd, 0x41, 0xbd, 0xd4, 0xfd, 0x36, 0xc0, 0x65, 0x6b, 0x6b, 0x48, 0x1f,
+	0xe0, 0x4a, 0x20, 0x57, 0xa8, 0xff, 0x5a, 0x73, 0xa3, 0xca, 0xd2, 0x7c, 0x63, 0x7f, 0xf3, 0x30,
+	0xf3, 0x7b, 0x0d, 0x76, 0x9e, 0x96, 0x1c, 0x14, 0xc9, 0xc2, 0x77, 0x68, 0xb4, 0x36, 0xad, 0x5a,
+	0x65, 0xbf, 0x74, 0x9f, 0x6b, 0x7f, 0x9f, 0xde, 0xcb, 0x7f, 0x5d, 0x9d, 0xfe, 0x06, 0x00, 0x00,
+	0xff, 0xff, 0xad, 0x15, 0xab, 0x5a, 0x91, 0x02, 0x00, 0x00,
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConnInterface
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion6
+
+// RemiderServiceClient is the client API for RemiderService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type RemiderServiceClient interface {
+	CreateTask(ctx context.Context, in *TaskRequest, opts ...grpc.CallOption) (*TaskResponse, error)
+	GetTasks(ctx context.Context, in *GetTasksRequest, opts ...grpc.CallOption) (*TasksResponse, error)
+}
+
+type remiderServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewRemiderServiceClient(cc grpc.ClientConnInterface) RemiderServiceClient {
+	return &remiderServiceClient{cc}
+}
+
+func (c *remiderServiceClient) CreateTask(ctx context.Context, in *TaskRequest, opts ...grpc.CallOption) (*TaskResponse, error) {
+	out := new(TaskResponse)
+	err := c.cc.Invoke(ctx, "/remiderService.RemiderService/CreateTask", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *remiderServiceClient) GetTasks(ctx context.Context, in *GetTasksRequest, opts ...grpc.CallOption) (*TasksResponse, error) {
+	out := new(TasksResponse)
+	err := c.cc.Invoke(ctx, "/remiderService.RemiderService/GetTasks", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// RemiderServiceServer is the server API for RemiderService service.
+type RemiderServiceServer interface {
+	CreateTask(context.Context, *TaskRequest) (*TaskResponse, error)
+	GetTasks(context.Context, *GetTasksRequest) (*TasksResponse, error)
+}
+
+// UnimplementedRemiderServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedRemiderServiceServer struct {
+}
+
+func (*UnimplementedRemiderServiceServer) CreateTask(ctx context.Context, req *TaskRequest) (*TaskResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateTask not implemented")
+}
+func (*UnimplementedRemiderServiceServer) GetTasks(ctx context.Context, req *GetTasksRequest) (*TasksResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTasks not implemented")
+}
+
+func RegisterRemiderServiceServer(s *grpc.Server, srv RemiderServiceServer) {
+	s.RegisterService(&_RemiderService_serviceDesc, srv)
+}
+
+func _RemiderService_CreateTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TaskRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RemiderServiceServer).CreateTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/remiderService.RemiderService/CreateTask",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RemiderServiceServer).CreateTask(ctx, req.(*TaskRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RemiderService_GetTasks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTasksRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RemiderServiceServer).GetTasks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/remiderService.RemiderService/GetTasks",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RemiderServiceServer).GetTasks(ctx, req.(*GetTasksRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _RemiderService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "remiderService.RemiderService",
+	HandlerType: (*RemiderServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateTask",
+			Handler:    _RemiderService_CreateTask_Handler,
+		},
+		{
+			MethodName: "GetTasks",
+			Handler:    _RemiderService_GetTasks_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "protoService/remiderService.proto",
 }
