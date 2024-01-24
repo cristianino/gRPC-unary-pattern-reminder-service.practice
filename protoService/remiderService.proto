@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package remiderService;
+
+option go_package = "protoService";
+
+import "protoService/task.proto";
+
+message TaskRequest {
+    Task task = 1;
+}
+
+message TaskResponse {
+    string message = 1;
+}
+
+message GetTasksRequest {
+    string message = 1;
+}
+
+message TasksResponse {
+    repeated Task tasks = 1;
+}
+
+service RemiderService {
+    rpc CreateTask (TaskRequest) returns (TaskResponse);
+    rpc GetTasks (GetTasksRequest) returns (TasksResponse);
+}
