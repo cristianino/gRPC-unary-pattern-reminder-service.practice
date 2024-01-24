@@ -25,7 +25,7 @@ This repository contains a basic implementation of the gRPC unary pattern in Go,
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-username/grpc-unary-pattern-practice.git
+   git clone https://github.com/cristianino/gRPC-unary-pattern-reminder-service.practice.git
    cd grpc-unary-pattern-practice
    ```
 
