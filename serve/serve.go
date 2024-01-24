@@ -47,8 +47,9 @@ func (s *server) CreateTask(ctx context.Context, req *protoService.TaskRequest) 
 	task := req.GetTask()
 
 	s.TaskRepo.CreateTask(task)
+	response := &protoService.TaskResponse{Message: "Task created successfully"}
 
-	return nil, nil
+	return response, nil
 }
 
 func (s *server) GetTasks(ctx context.Context, req *protoService.GetTasksRequest) (*protoService.TasksResponse, error) {
