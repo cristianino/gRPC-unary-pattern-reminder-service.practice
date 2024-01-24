@@ -113,7 +113,21 @@ func createTask(c protoService.RemiderServiceClient) {
 		log.Fatalf("Error calling createTask RPC: %v", err)
 	}
 
-	log.Printf("Response createTask: %v", res.Message)
+	// Imprimir detalles de la tarea recién creada
+	if res.Task != nil {
+		fmt.Printf("Task ID: %d\n", res.Task.Id)
+		fmt.Printf("Task Message: %s\n", res.Task.Message)
+		fmt.Printf("Task Limit Date: %s\n", res.Task.LimitDate)
+		fmt.Printf("Task Team Name: %s\n", res.Task.TeamName)
+		fmt.Printf("Task Priority: %s\n", res.Task.Priority.String())
+
+		// Imprimir tags si existen
+		if len(res.Task.Tags) > 0 {
+			fmt.Printf("Task Tags: %s\n", strings.Join(res.Task.Tags, ", "))
+		}
+	} else {
+		fmt.Println("No task details returned.")
+	}
 }
 
 func getTasks(c protoService.RemiderServiceClient) {
@@ -146,6 +160,7 @@ func formatTasks(tasks []*protoService.Task) string {
 
 	result := "Tasks:\n"
 	for _, task := range tasks {
+		result += fmt.Sprintf("     Task ID: %d\n", task.Id)
 		result += fmt.Sprintf("    Message: %s\n", task.Message)
 		result += fmt.Sprintf("    Limit Date: %s\n", task.LimitDate)
 		result += fmt.Sprintf("    Team Name: %s\n", task.TeamName)

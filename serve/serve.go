@@ -40,14 +40,16 @@ func (ts *taskStore) GetTasks() []*protoService.Task {
 
 type server struct {
 	TaskRepo ItaskRepository
+	lastID   int32
 }
 
 func (s *server) CreateTask(ctx context.Context, req *protoService.TaskRequest) (*protoService.TaskResponse, error) {
 	fmt.Printf("CreateTask function was called with %v \n", req)
 	task := req.GetTask()
+	task.Id = s.getNextID()
 
 	s.TaskRepo.CreateTask(task)
-	response := &protoService.TaskResponse{Message: "Task created successfully"}
+	response := &protoService.TaskResponse{Message: "Task created successfully", Task: task}
 
 	return response, nil
 }
@@ -61,6 +63,11 @@ func (s *server) GetTasks(ctx context.Context, req *protoService.GetTasksRequest
 	return response, nil
 }
 
+func (s *server) getNextID() int32 {
+	s.lastID++
+	return s.lastID
+}
+
 func main() {
 	fmt.Println("remider service, Go server is runnig")
 
@@ -72,7 +79,7 @@ func main() {
 	taskRepo := &taskStore{Tasks: make([]*protoService.Task, 0)}
 	s := grpc.NewServer()
 
-	protoService.RegisterRemiderServiceServer(s, &server{taskRepo})
+	protoService.RegisterRemiderServiceServer(s, &server{taskRepo, 0})
 
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve %v", err)

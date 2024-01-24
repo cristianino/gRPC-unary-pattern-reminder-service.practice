@@ -5,11 +5,12 @@ package remiderService;
 option go_package = "protoService";
 
 message Task {
-    string message = 1;
-    string limit_date = 2;
-    repeated string tags = 3;
-    string team_name = 4;
-    PRIORITY priority = 5;
+    int32 id = 1;
+    string message = 2;
+    string limit_date = 3;
+    repeated string tags = 4;
+    string team_name = 5;
+    PRIORITY priority = 6;
 }
 
 enum PRIORITY {
@@ -24,6 +25,7 @@ message TaskRequest {
 
 message TaskResponse {
     string message = 1;
+    Task task = 2;
 }
 
 message GetTasksRequest {
